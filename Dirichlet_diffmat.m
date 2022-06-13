@@ -7,4 +7,5 @@ function D = Dirichlet_diffmat(N,order)
     D(end,:) = 0;
     D(end,end) = 1;
     
+    
 end
