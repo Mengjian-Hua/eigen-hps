@@ -42,3 +42,11 @@ D(end,end) = 1;
 
 
 end
+
+%% some simple test codes
+% [D,B] = diffmat_glue(600,2,2);
+% eigenmodes = real(sqrt(-eig(D,B)/pi/pi));
+% eigenmodes = sort(eigenmodes,"ascend");
+% [D2,B2] = diffmat_periodic(1199,2);
+% eigenmodes2 = real(sqrt(-eig(D2)/pi/pi));
+% eigenmodes2 = sort(eigenmodes2,"ascend");
