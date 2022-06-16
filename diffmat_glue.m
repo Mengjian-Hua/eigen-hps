@@ -22,9 +22,9 @@ B = eye(size(D));
             D1_2 = diffmat(N,1,[xi+2/K xi+4/K]);
             D1_first = D1_1(1,:);
             D1_last = D1_2(end,:);
-            D(first_index,first_index+1:last_index) = -D1_first(1:end-1);
-            D(first_index,first_index - (N-1):first_index-1) = D1_last(2:end);
-            D(first_index,first_index) = D1_last(1) - D1_first(end);
+            D(first_index,first_index+1:last_index) = -D1_first(2:end);
+            D(first_index,first_index - (N-1):first_index-1) = D1_last(1:end-1);
+            D(first_index,first_index) = D1_last(end) - D1_first(1);
         end
         
         
@@ -44,9 +44,10 @@ D(end,end) = 1;
 end
 
 %% some simple test codes
-% [D,B] = diffmat_glue(600,2,2);
+% N = 200; K = 20;
+% [D,B] = diffmat_glue(N,K,2);
 % eigenmodes = real(sqrt(-eig(D,B)/pi/pi));
 % eigenmodes = sort(eigenmodes,"ascend");
-% [D2,B2] = diffmat_periodic(1199,2);
+% [D2,B2] = diffmat_periodic(N*K-K+1,2);
 % eigenmodes2 = real(sqrt(-eig(D2)/pi/pi));
 % eigenmodes2 = sort(eigenmodes2,"ascend");
