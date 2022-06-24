@@ -27,12 +27,16 @@ function lambda = root_finder(lambda_0,dom,pdo,tol)
         % method until the error is less than the tolerance. 
         
             if(df1*df2<0)
-                diff = diff/10;
+                diff = diff/2;
             else
                 lambda = lambda - f1/df1;
                 lambda2 = lambda + diff;
                 f1 = eval_monitor(lambda,pdo,dom);
-            end      
+            end 
+            
+            if(f1/df1 < 1e-4)
+                break
+            end
     end
 
 end
