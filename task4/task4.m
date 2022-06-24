@@ -1,4 +1,4 @@
-% Laplace-Beltrami
+%% Plot the monitor function for the Laplace-Beltrami operator
 
 n = 20;
 dom = surfacemesh.sphere(n, 2);
