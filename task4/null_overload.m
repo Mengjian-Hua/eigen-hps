@@ -1,4 +1,4 @@
-function x = null(A)
+function x = null_overload(A)
 
 %% Solve for the singular linear system Ax = b
 %  based on the randomized method in the paper by
@@ -13,10 +13,6 @@ x = randn(dim(1),1);
 b = A*x;
 y = (A + p*q')\b;
 x = x-y;
-
-
-
-
 
 
 end
