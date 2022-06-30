@@ -15,7 +15,29 @@ elseif ( isa(c, 'surfacefun' ) )
          'Did you mean ''.*''?\n'])
 elseif ( isnumeric(c) && isscalar(c) )
     % Multiply SURFACEFUN F by scalar c:
-    f.vals = cellfun(@(vals) c*vals, f.vals, 'UniformOutput', false);
+    n = size(f, 2);
+    for i = 1:n
+        f(:,i).vals = cellfun(@(vals) c*vals, f(:,i).vals, 'UniformOutput', false);
+    end
+elseif (isnumeric(c) && isa(f,'surfacefun'))
+    if(all(size(c) > 1))
+        m = size(c, 1);
+        n = size(f, 2);
+        f_temp = f*0;
+        for i = 1:m
+            for j = 1:n
+                f_temp(:,i) = f_temp(:,i) + c(j,i)*f(:,i);
+            end
+        end
+        f = f_temp;
+    else 
+        n = size(f, 2);
+        f_temp = f(:,1)*0;
+            for j = 1:n
+                f_temp = f_temp + c(j)*f(:,j);
+            end
+        f = f_temp;
+    end
 else
     error('SURFACEFUN:mtimes:invalid', 'c must be a scalar.')
 end

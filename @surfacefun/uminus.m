@@ -5,7 +5,13 @@ function f = uminus(f)
 %   G = uminus(F) is called for the syntax '-F'.
 %
 %   See also UPLUS.
-
-f.vals = cellfun(@uminus, f.vals, 'UniformOutput', false);
+[~,m] = size(f);
+    if(m == 1)
+        f.vals = cellfun(@uminus, f.vals, 'UniformOutput', false);
+    else 
+        for i = 1:m
+            f(:,i).vals = cellfun(@uminus, f(:,i).vals, 'UniformOutput', false);
+        end
+    end
 
 end

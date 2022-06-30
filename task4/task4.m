@@ -1,12 +1,12 @@
 %% Plot the monitor function for the Laplace-Beltrami operator
 
-n = 20;
+n = 30;
 dom = surfacemesh.sphere(n, 2);
 
 %%
-lambda_list = -0.1:-0.2:-20;
+lambda_list = -0.1:-0.2:-21;
 tic
-for i = 1:length(lambda_list)
+parfor i = 1:length(lambda_list)
     lambda = lambda_list(i);
     pdo = [];
     pdo.lap = 1;

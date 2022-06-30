@@ -14,7 +14,7 @@ D = zeros(N_eigs,N_eigs); % matrix that stores all eigenvalues
 V = zeros(N_eigs,N_eigs); % matrix that stores all eigenvectors
 num_jumps = 0; % somtimes it may require more than one jump
 
-while (num_eigvalues_found <= N_eigs)
+while (num_eigvalues_found < N_eigs)
     
     lambda_new = root_finder(lambda,dom,pdo,1e-4);
     % if we get stuck in a piece, then try to go to the next piece
