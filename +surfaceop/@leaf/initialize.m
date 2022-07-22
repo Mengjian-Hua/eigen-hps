@@ -195,7 +195,7 @@ for k = 1:numPatches
 %     Q1(end,1) = 1;    
     
     % Construct the D2N map:
-    ss2 = [1:n 3*n-3:4*n-4 n:2:3*n-3 4*n-4 n+1:2:3*n-3 1];
+    ss2 = [1:n 3*n-3:4*n-4 n:2:3*n-3 4*n-4 1 n+1:2:3*n-3];
     dx = Dx(ee,:) * S; dx = dx(ss2,:);
     dy = Dy(ee,:) * S; dy = dy(ss2,:);
     dz = Dz(ee,:) * S; dz = dz(ss2,:);
