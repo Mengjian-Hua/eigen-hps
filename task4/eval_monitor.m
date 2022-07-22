@@ -9,8 +9,8 @@ function f = eval_monitor(lambda,pdo,dom)
     L = surfaceop(dom, pdo, 0);
     % L.rankdef = true;
     build(L)
-    D2N1 = L.patches{1,1}.child1.D2N;
-    D2N2 = L.patches{1,1}.child2.D2N;
-    f = eigs(D2N1+D2N2,1,"smallestabs");
+    % D2N1 = L.patches{1,1}.child1.D2N;
+    % D2N2 = L.patches{1,1}.child2.D2N;
+    f = eigs(L.patches{1}.A,1,"smallestabs");
 
 end

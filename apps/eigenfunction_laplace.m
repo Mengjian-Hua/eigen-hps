@@ -10,12 +10,12 @@ f = -l*(l+1)*sol;
 
 pdo = [];
 pdo.lap = 1;
+pdo.b = 12;
 tic
-L = surfaceop(dom, pdo, f);
+L = surfaceop(dom, pdo, 0);
 toc
-
+%% 
 tic
-L.rankdef = true;
 build(L)
 toc
 

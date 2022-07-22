@@ -30,18 +30,16 @@ n = size(dom.x{1}, 1);
 
 [X, Y] = chebpts2(n);             % Chebyshev points and grid.
 ii = abs(X) < 1 & abs(Y) < 1;     % Interior indices.
-% ii([1,end],[1,end]) = true;     % Treat corners as interior.
+ii([1,end],[1,end]) = true;       % Treat corners as interior.
 ee = ~ii;                         % Boundary indices.
-eta = 2;
-% Note that here the index sets are different from what we had before
-leftIdx  = 1:n-1;
-rightIdx = n:2*(n-1);
-downIdx  = 2*(n-1)+1:3*(n-1);
-upIdx    = 3*(n-1)+1:4*(n-1);
+leftIdx  = 1:n-2;
+rightIdx = n-1:2*(n-2);
+downIdx  = 2*(n-2)+1:3*(n-2);
+upIdx    = 3*(n-2)+1:4*(n-2);
 numBdyPts = sum(ee(:)); 
 numIntPts = sum(ii(:));
-ibc = 3*(n-1)+1;
-ss = [1:n-1, ibc:4*(n-1), n:2:ibc-1, n+1:2:ibc-1];
+ibc = 3*(n-2)+1;
+ss = [1:n-2, ibc:4*(n-2), n-1:2:ibc-1, n:2:ibc-1];
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% %%%%%%%%%%%%%%%%%%%%%%%%% DEFINE OPERATORS %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -64,7 +62,6 @@ end
 
 % Define scalar RHSs:
 if ( isnumeric(rhs) && isscalar(rhs) )
-    rhs_full = repmat(rhs,n^2, 1);
     rhs = repmat(rhs, numIntPts, 1);
 end
 
@@ -91,15 +88,12 @@ for k = 1:numPatches
     % Evaluate non-constant RHSs if required:
     if ( isa(rhs, 'function_handle') )
         rhs_eval = feval(rhs, x(ii), y(ii), z(ii));
-        rhs_eval_full = feval(rhs, x, y, z);
     elseif ( isa(rhs, 'surfacefun') )
         rhs_eval = rhs.vals{k}(ii);
-        rhs_eval_full = rhs.vals{k};
     elseif ( iscell(rhs) )
         rhs_eval = rhs{k};
     else
         rhs_eval = rhs;
-        rhs_eval_full = rhs_full;
     end
 
     %[Dx, Dy, Dz] = diffs(x, y, z);
@@ -147,8 +141,9 @@ for k = 1:numPatches
     if ( op.dy  ~= 0 ), A = A + op.dy(:).*Dy;   end
     if ( op.dz  ~= 0 ), A = A + op.dz(:).*Dz;   end
     if ( op.b   ~= 0 ), A = A + op.b(:).*II;    end
-    
-    % construct the solution operator (D2N)
+
+    % Construct solution operator:
+    %Ainv = @(u) A(ii,ii) \ u;
     if ( dom.singular(k) )
         dA = decomposition(A(ii,ii), 'cod');
         %dA = decomposition(A(ii,ii));
@@ -165,72 +160,39 @@ for k = 1:numPatches
         %Ainv = @(u) V1*(U1*u);
         S = Ainv([-A(ii,ee), rhs_eval]);
     end
-     
+
     % Replace solution operator for corners with interp conditions:
-%     S([1:2,end-1:end],:) = 0;
-%     S(1:2,1:n-2) = B;
-%     S([end-1,end],end-n+2:end-1) = B;
-% 
+    S([1:2,end-1:end],:) = 0;
+    S(1:2,1:n-2) = B;
+    S([end-1,end],end-n+2:end-1) = B;
+
     % Append boundary points to solution operator:
     tmpS = zeros(n^2, size(S, 2));
     tmpS(ii,:) = S;
     tmpS(ee,:) = eye(numBdyPts, numBdyPts+1);
     S = tmpS;
     S = S(:,[ss end]);
-    
-    % projection from the first kind nodes to the second kinds nodes
-    S(:,1:end-1) = S(:,1:end-1)*cheb_projection(n,n-1,"second");
-    
-    % Q1 maps 4n-4 boundary points to 4n boundary points and 
-    % Q1 duplicates the four corners. Note that Q1 must be applied after 
-    % sorting all the boundary points by applying "ss". 
-%     Q1 = zeros(4*n,4*n-4); 
-%     Q1(1:n,1:n) = eye(n);
-%     Q1(n+1,n) = 1;
-%     Q1(n+2:2*n,n+1:2*n-1) = eye(n-1);
-%     Q1(2*n+1,2*n-1) = 1;
-%     Q1(2*n+2:3*n,2*n:3*n-2) = eye(n-1);
-%     Q1(3*n+1,3*n-2) = 1;
-%     Q1(3*n+2:4*n-1,3*n-1:4*n-4) = eye(n-2);
-%     Q1(end,1) = 1;    
-    
+
     % Construct the D2N map:
-    ss2 = [1:n 3*n-3:4*n-4 n:2:3*n-3 4*n-4 n+1:2:3*n-3 1];
-    dx = Dx(ee,:) * S; dx = dx(ss2,:);
-    dy = Dy(ee,:) * S; dy = dy(ss2,:);
-    dz = Dz(ee,:) * S; dz = dz(ss2,:);
+    dx = Dx(ee,:) * S; dx = dx(ss,:);
+    dy = Dy(ee,:) * S; dy = dy(ss,:);
+    dz = Dz(ee,:) * S; dz = dz(ss,:);
     [nl, nr, nd, nu] = normals(x, y, z);
-    D2N = zeros(numBdyPts+4, numBdyPts+1);
-    
-    % new index lists with duplicated corners (we may have some bug here)
-    leftIdx_d = 1:n;
-    rightIdx_d = n+1:2*n;
-    downIdx_d = 2*n+1:3*n;
-    upIdx_d = 3*n+1:4*n;
-    
-    D2N(leftIdx_d,:)  = nl(:,1).*dx(leftIdx_d,:)  + nl(:,2).*dy(leftIdx_d,:)  + nl(:,3).*dz(leftIdx_d,:);
-    D2N(rightIdx_d,:) = nr(:,1).*dx(rightIdx_d,:) + nr(:,2).*dy(rightIdx_d,:) + nr(:,3).*dz(rightIdx_d,:);
-    D2N(downIdx_d,:)  = nd(:,1).*dx(downIdx_d,:)  + nd(:,2).*dy(downIdx_d,:)  + nd(:,3).*dz(downIdx_d,:);
-    D2N(upIdx_d,:)    = nu(:,1).*dx(upIdx_d,:)    + nu(:,2).*dy(upIdx_d,:)    + nu(:,3).*dz(upIdx_d,:);
-    
-    % map 4n boundary points of the second kind
-    % with duplicated corners to 4n-4 points of the first kind
-    
-    D2N = cheb_projection(n-1,n,"first_duplicate")*D2N;
-    
-    dx = Dx(ee,:); dx = dx(ss2,:);
-    dy = Dy(ee,:); dy = dy(ss2,:);
-    dz = Dz(ee,:); dz = dz(ss2,:);
-    normal_d = zeros(numBdyPts + 4, n^2);
-    normal_d(leftIdx_d,:)  = nl(:,1).*dx(leftIdx_d,:)  + nl(:,2).*dy(leftIdx_d,:)  + nl(:,3).*dz(leftIdx_d,:);
-    normal_d(rightIdx_d,:) = nr(:,1).*dx(rightIdx_d,:) + nr(:,2).*dy(rightIdx_d,:) + nr(:,3).*dz(rightIdx_d,:);
-    normal_d(downIdx_d,:)  = nd(:,1).*dx(downIdx_d,:)  + nd(:,2).*dy(downIdx_d,:)  + nd(:,3).*dz(downIdx_d,:);
-    normal_d(upIdx_d,:)    = nu(:,1).*dx(upIdx_d,:)    + nu(:,2).*dy(upIdx_d,:)    + nu(:,3).*dz(upIdx_d,:);
-    
-    % map 4n boundary points of the second kind
-    % with duplicated corners to 4n-4 points of the first kind
-    normal_d = cheb_projection(n-1,n,"first_duplicate")*normal_d;
-    
+    D2N = zeros(numBdyPts, numBdyPts+1);
+    D2N(leftIdx,:)  = nl(:,1).*dx(leftIdx,:)  + nl(:,2).*dy(leftIdx,:)  + nl(:,3).*dz(leftIdx,:);
+    D2N(rightIdx,:) = nr(:,1).*dx(rightIdx,:) + nr(:,2).*dy(rightIdx,:) + nr(:,3).*dz(rightIdx,:);
+    D2N(downIdx,:)  = nd(:,1).*dx(downIdx,:)  + nd(:,2).*dy(downIdx,:)  + nd(:,3).*dz(downIdx,:);
+    D2N(upIdx,:)    = nu(:,1).*dx(upIdx,:)    + nu(:,2).*dy(upIdx,:)    + nu(:,3).*dz(upIdx,:);
+
+    dx = Dx(ee,:); dx = dx(ss,:);
+    dy = Dy(ee,:); dy = dy(ss,:);
+    dz = Dz(ee,:); dz = dz(ss,:);
+    normal_d = zeros(numBdyPts, n^2);
+    normal_d(leftIdx,:)  = nl(:,1).*dx(leftIdx,:)  + nl(:,2).*dy(leftIdx,:)  + nl(:,3).*dz(leftIdx,:);
+    normal_d(rightIdx,:) = nr(:,1).*dx(rightIdx,:) + nr(:,2).*dy(rightIdx,:) + nr(:,3).*dz(rightIdx,:);
+    normal_d(downIdx,:)  = nd(:,1).*dx(downIdx,:)  + nd(:,2).*dy(downIdx,:)  + nd(:,3).*dz(downIdx,:);
+    normal_d(upIdx,:)    = nu(:,1).*dx(upIdx,:)    + nu(:,2).*dy(upIdx,:)    + nu(:,3).*dz(upIdx,:);
+
     % The D2N map needs to be scaled on each side (e.g. when being
     % merged) to account for the Jacobian scaling which has been
     % factored out of the coordinate derivative maps. This scaling
@@ -246,47 +208,10 @@ for k = 1:numPatches
     else
         D2N_scl = {ones(n-2,1), ones(n-2,1), ones(n-2,1), ones(n-2,1)}.';
     end
-    
-    % Construct solution operator with impedance data:
 
-    if ( dom.singular(k) )
-        % solution operator, denoted by X, with incoming impedance data
-        id = eye(n^2,n^2);
-        F = normal_d + 1i*eta*cheb_projection(n-1,n,"first")*id(ee,:); % equation (2.9) with \eta = 2
-        B1 = [F;A(ii,:)];
-        dB1 = decomposition(B1, 'cod');
-        rhsX = [eye(4*n-4);zeros((n-2)^2,4*n-4)];
-        X = dB1\[rhsX,rhs_eval_full]; % equation below (2.10)
-    else
-        % solution operator, denoted by X, with incoming impedance data
-        id = eye(n^2,n^2);
-        F = normal_d + 1i*eta*cheb_projection(n-1,n,"first")*id(ee,:); % equation (2.9) with \eta = 2
-        B1 = [F;A(ii,:)];
-        dB1 = decomposition(B1);
-        rhsX = [eye(4*n-4);zeros((n-2)^2,4*n-4)];
-        X = dB1\[rhsX,rhs_eval_full]; % equation below (2.10)
-    end
-
-    % Replace solution operator for corners with interp conditions:
-    
-%     X([numBdyPts+1:numBdyPts+2,end-1:end],:) = 0;
-%     X(numBdyPts+1:numBdyPts+2,1:n-2) = B;
-%     X([end-1,end],end-n+2:end-1) = B;
-    
-        
-    % Construct the ItI map
-    G = normal_d - 1i*eta*cheb_projection(n-1,n,"first")*id(ee,:); % with \eta = 2
-    R = G*X;
-    
     % Extract the particular solution to store separately:
-    
-    if(0) % will be changed later. Put zero just for testing the code
-        u_part = S(:,end); S = S(:,1:end-1);
-        du_part = D2N(:,end); D2N = D2N(:,1:end-1);
-    else
-        u_part = X(:,end); X = X(:,1:end-1);
-        du_part = R(:,end);  D2N = D2N(:,1:end-1); R = R(:,1:end-1); % we are not quite sure about this line
-    end
+    u_part = S(:,end); S = S(:,1:end-1);
+    du_part = D2N(:,end); D2N = D2N(:,1:end-1);
 
     % Assemble the patch:
     xee = x(ee);
@@ -294,14 +219,6 @@ for k = 1:numPatches
     zee = z(ee);
     xyz = [xee(ss) yee(ss) zee(ss)];
     L{k} = surfaceop.leaf(dom, k, S, D2N, D2N_scl, u_part, du_part, edges, xyz, Ainv, normal_d);
-    
-    % sanity checks
-    
-    % check if the ItI map is unitary
-    T = -1i*eta*(R-eye(size(R)))\(R+eye(size(R)));
-    norm(T-D2N)
-    % check if we can recover the D2N map correctly from the ItI map
-    norm(R'*R - eye(size(R)))
 
 end
 
@@ -375,10 +292,10 @@ nr = normalize(nr);
 nd = normalize(nd);
 nu = normalize(nu);
 
-% nl([1,n],:) = [];
-% nr([1,n],:) = [];
-% nd([1,n],:) = [];
-% nu([1,n],:) = [];
+nl([1,n],:) = [];
+nr([1,n],:) = [];
+nd([1,n],:) = [];
+nu([1,n],:) = [];
 
 end
 
