@@ -1,45 +1,59 @@
-function f = mtimes(f, c)
-%*   Scale a SURFACEFUN.
-%   c*F or F*c multiplies a SURFACEFUN F by a scalar c.
+function f = mtimes(f, g)
+%*   Matrix multiplication for SURFACEFUN.
+%   c*F or F*c multiplies the SURFACEFUN F by the scalar c. F may be an
+%   array-valued SURFACEFUN and c may be a matrix of scalars with
+%   compatible dimensions.
 %
 %   See also TIMES.
 
-if ( ~isa(f, 'surfacefun') )
-    % Ensure F is the SURFACEFUN:
-    f = mtimes(c, f);
-    return
-elseif ( isa(c, 'surfacefun' ) )
-    % MTIMES should not be used to multiply two SURFACEFUNs:
-    error('SURFACEFUN:mtimes:twofuns', ...
-        ['Cannot multiply two surfacefuns with ''*''. ', ...
-         'Did you mean ''.*''?\n'])
-elseif ( isnumeric(c) && isscalar(c) )
-    % Multiply SURFACEFUN F by scalar c:
-    n = size(f, 2);
-    for i = 1:n
-        f(:,i).vals = cellfun(@(vals) c*vals, f(:,i).vals, 'UniformOutput', false);
-    end
-elseif (isnumeric(c) && isa(f,'surfacefun'))
-    if(all(size(c) > 1))
-        m = size(c, 1);
-        n = size(f, 2);
-        f_temp = f*0;
-        for i = 1:m
-            for j = 1:n
-                f_temp(:,i) = f_temp(:,i) + c(j,i)*f(:,i);
+if ( isempty(f) || isempty(g) )
+    f = [];
+elseif ( isa(f, 'surfacefun') && isnumeric(g) )
+    if ( isscalar(g) )
+        f = times(f, g);
+    else
+        % Make sure f is a quasimatrix:
+        if ( size(f, 1) > 1 && size(f, 2) > 1 )
+            error('SURFACEFUN:mtimes:notquasimatrix', 'Not a quasimatrix.');
+        end
+
+        % Check the dimensions:
+        [m, n] = size(g);
+        if ( m ~= size(f, 2) || ~ismatrix(g) )
+            error('SURFACEFUN:mtimes:dims', 'Matrix dimensions must agree.');
+        end
+
+        out = repmat(0*f(:,1), 1, size(g, 2));
+        for k = 1:n
+            for j = 1:m
+                out(:,k) = out(:,k) + f(:,j).*g(j,k);
             end
         end
-        f = f_temp;
-    else 
-        n = size(f, 2);
-        f_temp = f(:,1)*0;
-            for j = 1:n
-                f_temp = f_temp + c(j)*f(:,j);
+        f = out;
+    end
+elseif ( isnumeric(f) && isa(g, 'surfacefun') )
+    f = mtimes(g.', f.').';
+elseif ( isa(f, 'surfacefun') && isa(g, 'surfacefun') )
+    % MTIMES will take the L^2 inner product between arrays of surfacefuns
+    if ( ismatrix(f) && ismatrix(g) )
+        % Check the dimensions:
+        if ( size(f, 2) ~= size(g, 1) )
+            error('SURFACEFUN:mtimes:dims', 'Matrix dimensions must agree.');
+        end
+        out = zeros(size(f, 1), size(g, 2));
+        for i = 1:size(f, 1)
+            for j = 1:size(g, 2)
+                for k = 1:size(f, 2)
+                    out(i,j) = out(i,j) + integral2( f(i,k).*g(k,j) );
+                end
             end
-        f = f_temp;
+        end
+        f = out;
     end
 else
-    error('SURFACEFUN:mtimes:invalid', 'c must be a scalar.')
+    error('SURFACEFUN:mtimes:unknown', ...
+          ['Undefined function ''mtimes'' for input arguments of type ' ...
+           '%s and %s.'], class(f), class(g));
 end
 
 end
