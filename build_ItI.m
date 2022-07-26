@@ -3,7 +3,7 @@ rng(0)
 u = randnfun2(1);
 f = lap(u);
 
-n = 30;
+n = 10;
 nbdy = n;
 kindFrom = 1;
 kindTo   = 1;

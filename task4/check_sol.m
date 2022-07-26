@@ -1,5 +1,5 @@
 clear all;
-l = 5;
+l = 2;
 n = 20;
 dom = surfacemesh.sphere(n, 2);
 

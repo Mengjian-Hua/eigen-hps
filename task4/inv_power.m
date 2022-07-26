@@ -1,8 +1,8 @@
 %% inverse power iteration for spherical harmonics
 clear all;
-l = 16; % number of eigenvalues we want to compute
-n = 20; % number of mesh points
-dom = surfacemesh.sphere(n, 2);
+l = 5; % number of eigenvalues we want to compute
+n = 30; % number of mesh points
+dom = surfacemesh.blob(n);
 
 pdo = [];
 pdo.lap = 1;
