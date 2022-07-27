@@ -2,7 +2,7 @@
 clear all;
 l = 5; % number of eigenvalues we want to compute
 n = 30; % number of mesh points
-dom = surfacemesh.blob(n);
+dom = surfacemesh.mobius(n,2,8);
 
 pdo = [];
 pdo.lap = 1;
