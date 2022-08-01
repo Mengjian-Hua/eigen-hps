@@ -287,7 +287,7 @@ for k = 1:numPatches
 
     if ( dom.singular(k) )
         % solution operator, denoted by X, with incoming impedance data
-        F = normal_d + eta*B; % equation (2.9) 
+        F = normal_d + eta*B*P01; % equation (2.9) 
         % B1 = [F;A(ii,:)];
         B1 = [P02*P01*A;F];
         dB1 = decomposition(B1, 'cod');
@@ -295,7 +295,7 @@ for k = 1:numPatches
         X = dB1\rhsX; % equation below (2.10)
     else
         % solution operator, denoted by X, with incoming impedance data
-        F = normal_d + eta*B; % equation (2.9) 
+        F = normal_d + eta*B*P01; % equation (2.9) 
         % B1 = [F;A(ii,:)];
         B1 = [P02*P01*A;F];
         dB1 = decomposition(B1);
@@ -311,7 +311,7 @@ for k = 1:numPatches
     
         
     % Construct the ItI map
-    G = normal_d - eta*B;
+    G = normal_d - eta*B*P01;
     R = G*X(:,1:numBdyPts);
     [xn1, ~, vn1] = chebpts(nbdy, 1);
     [xn2, ~, vn2] = chebpts(n-2, 1);
@@ -337,9 +337,16 @@ for k = 1:numPatches
 %     zee = z(ee);
 %     xyz = [xee(ss) yee(ss) zee(ss)];
 %     L{k} = surfaceop.leaf(dom, k, S, D2N, D2N_scl, u_part, du_part, edges, xyz, Ainv, normal_d);
-    
+    u_true = randnfunsphere(1);
+    f = lap(u_true);
+    uu2 = u_true(x,y,z); % second kind nodes
+    ff2 = f(x,y,z);% second kind nodes
+    ff1 = P01*ff2(:); % second to first kind nodes
+    gg = F*uu2(:); % apply the ItI map 
+    norm(ff1 - X*[gg(:);1])
 
 end
+
 
 end
 
