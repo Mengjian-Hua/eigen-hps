@@ -31,7 +31,7 @@ n = size(dom.x{1}, 1);
 [X, Y] = chebpts2(n);             % Chebyshev points and grid.
 ii = abs(X) < 1 & abs(Y) < 1;     % Interior indices.
 % ii([1,end],[1,end]) = true;     % Treat corners as interior.
-ee = ~ii;                         % Boundary indices.
+% ee = ~ii;                         % Boundary indices.
 eta = 2i;
 % Note that here the index sets are different from what we had before
 kindFrom = 1;
@@ -41,7 +41,7 @@ kindTo   = 1;
 [x0, ~, v0] = chebpts(n,   kindFrom);
 [x1, ~, v1] = chebpts(n,   2);
 [x2, ~, v2] = chebpts(n-2, kindTo);
-% [x3, ~, v3] = chebpts(n-2,   2);
+[x3, ~, v3] = chebpts(n-2,   2);
 nbdy = n;
 numBdyPts = 4*nbdy; 
 numIntPts = sum(ii(:));
@@ -57,10 +57,10 @@ for k = 1:numBdyPts
     B(k,:) = kron(barymat(xxb(k), x0, v0), barymat(yyb(k), x0, v0));
 end
 
-% leftIdx  = 1:n-1;
-% rightIdx = n:2*(n-1);
-% downIdx  = 2*(n-1)+1:3*(n-1);
-% upIdx    = 3*(n-1)+1:4*(n-1);
+leftIdx  = 1:n;
+rightIdx = 3*n+1:4*n;
+downIdx  = n+2:2:3*n;
+upIdx    = n+1:2:3*n;
 % 
 % ibc = 3*(n-1)+1;
 % ss = [1:n-1, ibc:4*(n-1), n:2:ibc-1, n+1:2:ibc-1];
@@ -260,14 +260,18 @@ for k = 1:numPatches
     S01 = barymat(x0, x1, v1);
     P01 = kron(S01, S01);
     
-    % S_rhs = barymat(x2,x3,v3);
-    % P_rhs = kron(S_rhs, S_rhs);
+%     Dx = P01*Dx;
+%     Dy = P01*Dy;
+%     Dz = P01*Dz;
     
     normal_d(1:nbdy,:)  = nl(:,1).*(B(1:nbdy,:)*P01*Dx)  + nl(:,2).*(B(1:nbdy,:)*P01*Dy)  + nl(:,3).*(B(1:nbdy,:)*P01*Dz);
     normal_d(nbdy+1:2*nbdy,:) = nr(:,1).*(B(nbdy+1:2*nbdy,:)*P01*Dx) + nr(:,2).*(B(nbdy+1:2*nbdy,:)*P01*Dy) + nr(:,3).*(B(nbdy+1:2*nbdy,:)*P01*Dz);
     normal_d(2*nbdy+1:3*nbdy,:)  = nd(:,1).*(B(2*nbdy+1:3*nbdy,:)*P01*Dx)  + nd(:,2).*(B(2*nbdy+1:3*nbdy,:)*P01*Dy)  + nd(:,3).*(B(2*nbdy+1:3*nbdy,:)*P01*Dz);
     normal_d(3*nbdy+1:4*nbdy,:)    = nu(:,1).*(B(3*nbdy+1:4*nbdy,:)*P01*Dx)    + nu(:,2).*(B(3*nbdy+1:4*nbdy,:)*P01*Dy)  + nu(:,3).*(B(3*nbdy+1:4*nbdy,:)*P01*Dz);
-    
+%     normal_d(1:nbdy,:)  = nl(:,1).*(Dx(leftIdx,:))  + nl(:,2).*(Dy(leftIdx,:))  + nl(:,3).*(Dz(leftIdx,:));
+%     normal_d(nbdy+1:2*nbdy,:) = nr(:,1).*(Dx(rightIdx,:)) + nr(:,2).*(Dy(rightIdx,:)) + nr(:,3).*(Dz(rightIdx,:));
+%     normal_d(2*nbdy+1:3*nbdy,:)  = nd(:,1).*(Dx(downIdx,:))  + nd(:,2).*(Dy(downIdx,:))  + nd(:,3).*(Dz(downIdx,:));
+%     normal_d(3*nbdy+1:4*nbdy,:)    = nu(:,1).*(Dx(upIdx,:))    + nu(:,2).*(Dy(upIdx,:))  + nu(:,3).*(Dz(upIdx,:));
 %     % map 4n boundary points of the second kind
 %     % with duplicated corners to 4n-4 points of the first kind
 %     % normal_d = cheb_projection(n-1,n,"first_duplicate")*normal_d;
@@ -293,19 +297,18 @@ for k = 1:numPatches
     if ( dom.singular(k) )
         % solution operator, denoted by X, with incoming impedance data
         F = normal_d + eta*B*P01; % equation (2.9) 
-        % B1 = [F;A(ii,:)];
-        B1 = [P02*P01*A;F];
+        A = P01*A;
+        B1 = [A(ii,:);F];
         dB1 = decomposition(B1, 'cod');
-        % rhs_eval = P_rhs*rhs_eval;
         rhsX = [zeros(numIntPts, numBdyPts) rhs_eval(:); eye(numBdyPts) zeros(numBdyPts, 1)];
         X = dB1\rhsX; % equation below (2.10)
     else
         % solution operator, denoted by X, with incoming impedance data
+        ee = [leftIdx rightIdx downIdx upIdx];
         F = normal_d + eta*B*P01; % equation (2.9) 
-        % B1 = [F;A(ii,:)];
-        B1 = [P02*P01*A;F];
+        A = P01*A;
+        B1 = [A(ii,:);F];
         dB1 = decomposition(B1);
-        % rhs_eval = P_rhs*rhs_eval;
         rhsX = [zeros(numIntPts, numBdyPts) rhs_eval(:); eye(numBdyPts) zeros(numBdyPts, 1)];
         X = dB1\rhsX; % equation below (2.10)
     end
