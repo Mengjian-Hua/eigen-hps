@@ -41,6 +41,7 @@ kindTo   = 1;
 [x0, ~, v0] = chebpts(n,   kindFrom);
 [x1, ~, v1] = chebpts(n,   2);
 [x2, ~, v2] = chebpts(n-2, kindTo);
+% [x3, ~, v3] = chebpts(n-2,   2);
 nbdy = n;
 numBdyPts = 4*nbdy; 
 numIntPts = sum(ii(:));
@@ -246,6 +247,7 @@ for k = 1:numPatches
 %     dz = Dz(ee,:); dz = dz(ss2,:);
     [nl, nr, nd, nu] = normals(x, y, z);
     for i = 1:3
+          
         nl(:,i) = chebvals2chebvals(nl(:,i), 2, 1);
         nr(:,i) = chebvals2chebvals(nr(:,i), 2, 1);
         nd(:,i) = chebvals2chebvals(nd(:,i), 2, 1);
@@ -257,6 +259,9 @@ for k = 1:numPatches
     P02 = kron(S02, S02);
     S01 = barymat(x0, x1, v1);
     P01 = kron(S01, S01);
+    
+    % S_rhs = barymat(x2,x3,v3);
+    % P_rhs = kron(S_rhs, S_rhs);
     
     normal_d(1:nbdy,:)  = nl(:,1).*(B(1:nbdy,:)*P01*Dx)  + nl(:,2).*(B(1:nbdy,:)*P01*Dy)  + nl(:,3).*(B(1:nbdy,:)*P01*Dz);
     normal_d(nbdy+1:2*nbdy,:) = nr(:,1).*(B(nbdy+1:2*nbdy,:)*P01*Dx) + nr(:,2).*(B(nbdy+1:2*nbdy,:)*P01*Dy) + nr(:,3).*(B(nbdy+1:2*nbdy,:)*P01*Dz);
@@ -291,6 +296,7 @@ for k = 1:numPatches
         % B1 = [F;A(ii,:)];
         B1 = [P02*P01*A;F];
         dB1 = decomposition(B1, 'cod');
+        % rhs_eval = P_rhs*rhs_eval;
         rhsX = [zeros(numIntPts, numBdyPts) rhs_eval(:); eye(numBdyPts) zeros(numBdyPts, 1)];
         X = dB1\rhsX; % equation below (2.10)
     else
@@ -299,6 +305,7 @@ for k = 1:numPatches
         % B1 = [F;A(ii,:)];
         B1 = [P02*P01*A;F];
         dB1 = decomposition(B1);
+        % rhs_eval = P_rhs*rhs_eval;
         rhsX = [zeros(numIntPts, numBdyPts) rhs_eval(:); eye(numBdyPts) zeros(numBdyPts, 1)];
         X = dB1\rhsX; % equation below (2.10)
     end
@@ -337,13 +344,15 @@ for k = 1:numPatches
 %     zee = z(ee);
 %     xyz = [xee(ss) yee(ss) zee(ss)];
 %     L{k} = surfaceop.leaf(dom, k, S, D2N, D2N_scl, u_part, du_part, edges, xyz, Ainv, normal_d);
-    u_true = randnfunsphere(1);
-    f = lap(u_true);
+    
+    % u_true = randnfunsphere(1);
+    u_true = spherefun.sphharm(1,0);
+    % f = lap(u_true);
     uu2 = u_true(x,y,z); % second kind nodes
-    ff2 = f(x,y,z);% second kind nodes
-    ff1 = P01*ff2(:); % second to first kind nodes
-    gg = F*uu2(:); % apply the ItI map 
-    norm(ff1 - X*[gg(:);1])
+    % ff2 = f(x,y,z);% second kind nodes
+    % norm(-2*uu2 - ff2)
+    gg = F*uu2(:); % compute the incoming impedance data
+    norm(uu2(:) - X*[gg(:);1])
 
 end
 
