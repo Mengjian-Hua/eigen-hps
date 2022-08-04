@@ -31,7 +31,7 @@ n = size(dom.x{1}, 1);
 [X, Y] = chebpts2(n);             % Chebyshev points and grid.
 ii = abs(X) < 1 & abs(Y) < 1;     % Interior indices.
 % ii([1,end],[1,end]) = true;     % Treat corners as interior.
-% ee = ~ii;                         % Boundary indices.
+ee = ~ii;                         % Boundary indices.
 eta = 2i;
 % Note that here the index sets are different from what we had before
 kindFrom = 1;
@@ -309,7 +309,6 @@ for k = 1:numPatches
         X = dB1\rhsX; % equation below (2.10)
     else
         % solution operator, denoted by X, with incoming impedance data
-        % ee = [leftIdx rightIdx downIdx upIdx];
         F = normal_d + eta*B*P01; % equation (2.9) 
         %A = P01*A;
         %B1 = [A(ii,:);F];
@@ -339,6 +338,7 @@ for k = 1:numPatches
     R = CC * R * CC1;
     
     u_part = X(:,end);
+    Iu_part = R*CC*u_part;
     
 %     out_Impedance = R*gg + CC*G*u_part;
     
@@ -354,11 +354,11 @@ for k = 1:numPatches
 %     end
 
     % Assemble the patch:
-%     xee = x(ee);
-%     yee = y(ee);
-%     zee = z(ee);
-%     xyz = [xee(ss) yee(ss) zee(ss)];
-%     L{k} = surfaceop.leaf(dom, k, S, D2N, D2N_scl, u_part, du_part, edges, xyz, Ainv, normal_d);
+    xee = x(ee);
+    yee = y(ee);
+    zee = z(ee);
+    xyz = [xee(ss) yee(ss) zee(ss)];
+    L{k} = surfaceop.leaf(dom, k, X, R, u_part, Iu_part, edges, xyz, normal_d,F,G);
     
     % u_true = randnfunsphere(1);
     u_true = spherefun.sphharm(1,0);
