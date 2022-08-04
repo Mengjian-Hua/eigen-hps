@@ -87,8 +87,8 @@ Dv = kron(I, D);
 
 % Define scalar RHSs:
 if ( isnumeric(rhs) && isscalar(rhs) )
-    % rhs_full = repmat(rhs,n^2, 1);
-    rhs = repmat(rhs, numIntPts, 1);
+    rhs_eval_full = repmat(rhs,n^2, 1);
+    rhs_eval = repmat(rhs, numIntPts, 1);
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -114,15 +114,15 @@ for k = 1:numPatches
     % Evaluate non-constant RHSs if required:
     if ( isa(rhs, 'function_handle') )
         rhs_eval = feval(rhs, x(ii), y(ii), z(ii));
-        % rhs_eval_full = feval(rhs, x, y, z);
+        rhs_eval_full = feval(rhs, x, y, z);
     elseif ( isa(rhs, 'surfacefun') )
         rhs_eval = rhs.vals{k}(ii);
-        % rhs_eval_full = rhs.vals{k};
+        rhs_eval_full = rhs.vals{k};
     elseif ( iscell(rhs) )
         rhs_eval = rhs{k};
-    else
-        rhs_eval = rhs;
-        % rhs_eval_full = rhs_full;
+%     else
+%         rhs_eval = rhs;
+%         rhs_eval_full = rhs_full;
     end
 
     %[Dx, Dy, Dz] = diffs(x, y, z);
@@ -260,6 +260,11 @@ for k = 1:numPatches
     S01 = barymat(x0, x1, v1);
     P01 = kron(S01, S01);
     
+    %S_rhs = barymat(x2,x3,v3);
+    %P_rhs = kron(S_rhs,S_rhs);
+    S_rhs = barymat(x2, x1, v1);
+    P_rhs = kron(S_rhs, S_rhs);
+    rhs_eval = P_rhs * rhs_eval_full(:);
 %     Dx = P01*Dx;
 %     Dy = P01*Dy;
 %     Dz = P01*Dz;
@@ -297,17 +302,19 @@ for k = 1:numPatches
     if ( dom.singular(k) )
         % solution operator, denoted by X, with incoming impedance data
         F = normal_d + eta*B*P01; % equation (2.9) 
-        A = P01*A;
-        B1 = [A(ii,:);F];
+        A = P_rhs*A;
+        B1 = [A ; F];
         dB1 = decomposition(B1, 'cod');
         rhsX = [zeros(numIntPts, numBdyPts) rhs_eval(:); eye(numBdyPts) zeros(numBdyPts, 1)];
         X = dB1\rhsX; % equation below (2.10)
     else
         % solution operator, denoted by X, with incoming impedance data
-        ee = [leftIdx rightIdx downIdx upIdx];
+        % ee = [leftIdx rightIdx downIdx upIdx];
         F = normal_d + eta*B*P01; % equation (2.9) 
-        A = P01*A;
-        B1 = [A(ii,:);F];
+        %A = P01*A;
+        %B1 = [A(ii,:);F];
+        A = P_rhs*A;
+        B1 = [A ; F];
         dB1 = decomposition(B1);
         rhsX = [zeros(numIntPts, numBdyPts) rhs_eval(:); eye(numBdyPts) zeros(numBdyPts, 1)];
         X = dB1\rhsX; % equation below (2.10)
@@ -330,6 +337,11 @@ for k = 1:numPatches
     CC = blkdiag(C, C, C, C);
     CC1 = blkdiag(C1, C1, C1, C1);
     R = CC * R * CC1;
+    
+    u_part = X(:,end);
+    
+%     out_Impedance = R*gg + CC*G*u_part;
+    
     
     % Extract the particular solution to store separately:
     
@@ -356,6 +368,10 @@ for k = 1:numPatches
     % norm(-2*uu2 - ff2)
     gg = F*uu2(:); % compute the incoming impedance data
     norm(uu2(:) - X*[gg(:);1])
+    
+    gg = CC*gg; 
+    ff = CC*G*uu2(:);
+    norm(R*gg + CC*G*u_part - ff)
 
 end
 
