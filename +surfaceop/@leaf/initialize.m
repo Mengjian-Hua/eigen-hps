@@ -106,10 +106,10 @@ for k = 1:numPatches
     x = dom.x{k};
     y = dom.y{k};
     z = dom.z{k};
-%     edges = [ x(1,1) y(1,1) z(1,1) x(n,1) y(n,1) z(n,1) n ;  % "Left" side
-%               x(1,n) y(1,n) z(1,n) x(n,n) y(n,n) z(n,n) n ;  % "Right" side
-%               x(1,1) y(1,1) z(1,1) x(1,n) y(1,n) z(1,n) n ;  % "Down" side
-%               x(n,1) y(n,1) z(n,1) x(n,n) y(n,n) z(n,n) n ]; % "Up" side
+    edges = [ x(1,1) y(1,1) z(1,1) x(n,1) y(n,1) z(n,1) n ;  % "Left" side
+              x(1,n) y(1,n) z(1,n) x(n,n) y(n,n) z(n,n) n ;  % "Right" side
+              x(1,1) y(1,1) z(1,1) x(1,n) y(1,n) z(1,n) n ;  % "Down" side
+              x(n,1) y(n,1) z(n,1) x(n,n) y(n,n) z(n,n) n ]; % "Up" side
 
     % Evaluate non-constant RHSs if required:
     if ( isa(rhs, 'function_handle') )
@@ -273,10 +273,7 @@ for k = 1:numPatches
     normal_d(nbdy+1:2*nbdy,:) = nr(:,1).*(B(nbdy+1:2*nbdy,:)*P01*Dx) + nr(:,2).*(B(nbdy+1:2*nbdy,:)*P01*Dy) + nr(:,3).*(B(nbdy+1:2*nbdy,:)*P01*Dz);
     normal_d(2*nbdy+1:3*nbdy,:)  = nd(:,1).*(B(2*nbdy+1:3*nbdy,:)*P01*Dx)  + nd(:,2).*(B(2*nbdy+1:3*nbdy,:)*P01*Dy)  + nd(:,3).*(B(2*nbdy+1:3*nbdy,:)*P01*Dz);
     normal_d(3*nbdy+1:4*nbdy,:)    = nu(:,1).*(B(3*nbdy+1:4*nbdy,:)*P01*Dx)    + nu(:,2).*(B(3*nbdy+1:4*nbdy,:)*P01*Dy)  + nu(:,3).*(B(3*nbdy+1:4*nbdy,:)*P01*Dz);
-%     normal_d(1:nbdy,:)  = nl(:,1).*(Dx(leftIdx,:))  + nl(:,2).*(Dy(leftIdx,:))  + nl(:,3).*(Dz(leftIdx,:));
-%     normal_d(nbdy+1:2*nbdy,:) = nr(:,1).*(Dx(rightIdx,:)) + nr(:,2).*(Dy(rightIdx,:)) + nr(:,3).*(Dz(rightIdx,:));
-%     normal_d(2*nbdy+1:3*nbdy,:)  = nd(:,1).*(Dx(downIdx,:))  + nd(:,2).*(Dy(downIdx,:))  + nd(:,3).*(Dz(downIdx,:));
-%     normal_d(3*nbdy+1:4*nbdy,:)    = nu(:,1).*(Dx(upIdx,:))    + nu(:,2).*(Dy(upIdx,:))  + nu(:,3).*(Dz(upIdx,:));
+
 %     % map 4n boundary points of the second kind
 %     % with duplicated corners to 4n-4 points of the first kind
 %     % normal_d = cheb_projection(n-1,n,"first_duplicate")*normal_d;
@@ -338,7 +335,7 @@ for k = 1:numPatches
     R = CC * R * CC1;
     
     u_part = X(:,end);
-    Iu_part = R*CC*u_part;
+    Iu_part = CC*G*u_part;
     
 %     out_Impedance = R*gg + CC*G*u_part;
     
@@ -354,24 +351,25 @@ for k = 1:numPatches
 %     end
 
     % Assemble the patch:
-    xee = x(ee);
-    yee = y(ee);
-    zee = z(ee);
-    xyz = [xee(ss) yee(ss) zee(ss)];
-    L{k} = surfaceop.leaf(dom, k, X, R, u_part, Iu_part, edges, xyz, normal_d,F,G);
+%     xee = x(ee);
+%     yee = y(ee);
+%     zee = z(ee);
+%     xyz = [xee(ss) yee(ss) zee(ss)];
+    D2N = -eta*(R-eye(4*n-8))\(R+eye(4*n-8));
+    L{k} = surfaceop.leaf(dom, k, X, R, u_part, Iu_part, edges, D2N, normal_d);
     
     % u_true = randnfunsphere(1);
-    u_true = spherefun.sphharm(1,0);
-    % f = lap(u_true);
-    uu2 = u_true(x,y,z); % second kind nodes
-    % ff2 = f(x,y,z);% second kind nodes
-    % norm(-2*uu2 - ff2)
-    gg = F*uu2(:); % compute the incoming impedance data
-    norm(uu2(:) - X*[gg(:);1])
-    
-    gg = CC*gg; 
-    ff = CC*G*uu2(:);
-    norm(R*gg + CC*G*u_part - ff)
+%     u_true = spherefun.sphharm(1,0);
+%     % f = lap(u_true);
+%     uu2 = u_true(x,y,z); % second kind nodes
+%     % ff2 = f(x,y,z);% second kind nodes
+%     % norm(-2*uu2 - ff2)
+%     gg = F*uu2(:); % compute the incoming impedance data
+%     norm(uu2(:) - X*[gg(:);1])
+%     
+%     gg = CC*gg; 
+%     ff = CC*G*uu2(:);
+%     norm(R*gg + CC*G*u_part - ff)
 
 end
 

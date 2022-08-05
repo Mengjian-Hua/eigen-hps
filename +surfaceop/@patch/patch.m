@@ -5,15 +5,14 @@ classdef ( Abstract ) patch
 
         domain  % Domain of patch.
         id      % Index of patch in domain.
-        S       % Solution operator for patch.
-        D2N     % Dirichlet-to-Neumann map for patch.
-        D2N_scl % Cell array of scalars or function handles.
-                % The k-th entry is the scaling for the D2N map on side k.
+        X       % Solution operator for patch.
+        R     % Dirichlet-to-Neumann map for patch.
         u_part
-        du_part
+        Iu_part
         edges   % Boundary edges of patch.
-        xyz     % Boundary grid points of patch.
+        % xyz     % Boundary grid points of patch.
         len
+        D2N
 
     end
 
