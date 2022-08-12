@@ -5,12 +5,12 @@ classdef ( Abstract ) patch
 
         domain  % Domain of patch.
         id      % Index of patch in domain.
-        X       % Solution operator for patch.
+%         X       % Solution operator for patch.
         R     % Dirichlet-to-Neumann map for patch.
         u_part
         Iu_part
         edges   % Boundary edges of patch.
-        % xyz     % Boundary grid points of patch.
+        xyz     % Boundary grid points of patch.
         len
         D2N
 

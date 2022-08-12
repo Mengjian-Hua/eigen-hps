@@ -12,14 +12,14 @@ classdef leaf < surfaceop.patch
     properties
 
         n        % Discretization size of patch.
-        % X        % Local (homogeneous BC) solution operator.
+        X        % Local (homogeneous BC) solution operator.
         normal_d % Normal derivative operator.
                  % (These are stored so the RHS can be efficiently updated)
     end
 
     methods
 
-        function P = leaf(dom, id, X, R, u_part, Iu_part, edges, D2N, normal_d)
+        function P = leaf(dom, id, X, R, u_part, Iu_part, edges, D2N, xyz, normal_d)
 
             % Construct empty patch:
             if ( nargin == 0 )
@@ -35,7 +35,7 @@ classdef leaf < surfaceop.patch
             P.u_part = u_part;
             P.Iu_part = Iu_part;       % Outgoing impedance data (particular)
             P.edges = edges;           % Edges.
-%             P.xyz = xyz;               % Boundary nodes.
+            P.xyz = xyz;               % Boundary nodes.
             P.D2N = D2N;                  % Recovered D2N map
             P.normal_d = normal_d;     % Normal derivative operator.
             P.len = 1;

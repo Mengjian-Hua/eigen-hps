@@ -12,8 +12,8 @@ classdef parent < surfaceop.patch
         idx2        % How p.xyz relates to p.child2.xyz
         flip1
         flip2
-        scl1
-        scl2
+%         scl1
+%         scl2
         A           % Interface linear system
         dA          % Decomposition of interface linear system
 
