@@ -214,14 +214,33 @@ for k = 1:numPatches
     
     u_part = X(:,end);
     Iu_part = CC*G*u_part;
+
+    if ( dom.singular(k) )
+        D2N_scl = cell(4, 1);
+        J = dom.J{k}.^3; Jee = J(ee); Jss = Jee(ss);
+        D2N_scl{1} = Jss(leftIdx); % Left
+        D2N_scl{2} = Jss(rightIdx);  % Right
+        D2N_scl{3} = Jss(downIdx); % Down
+        D2N_scl{4} = Jss(upIdx);  % Up
+    else
+        D2N_scl = {ones(n-2,1), ones(n-2,1), ones(n-2,1), ones(n-2,1)}.';
+    end
     
     % Assemble the patch:
     xee = x(ee);
     yee = y(ee);
     zee = z(ee);
     xyz = [xee(ss) yee(ss) zee(ss)];
+
+    w = chebtech2.quadwts(n); w = w(:);
+    ww = w .* w.' .* sqrt(dom.J{k});
+    ww = ww(ee);
+    ww = ww(ss);
+
     D2N = -eta*(R-eye(4*n-8))\(R+eye(4*n-8));
-    L{k} = surfaceop.leaf(dom, k, X, R, u_part, Iu_part, edges, D2N, xyz, normal_d);
+    L{k} = surfaceop.leaf(dom, k, R, D2N, D2N_scl, u_part, Iu_part, edges, xyz, ww, X, normal_d,eta);
+    
+    % test
     u_true = spherefun.sphharm(1,0);
     uu2 = u_true(x,y,z); % second kind nodes
     gg = F*uu2(:); % compute the incoming impedance data

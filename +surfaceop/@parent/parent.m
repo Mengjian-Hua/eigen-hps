@@ -12,16 +12,16 @@ classdef parent < surfaceop.patch
         idx2        % How p.xyz relates to p.child2.xyz
         flip1
         flip2
-%         scl1
-%         scl2
-        A           % Interface linear system
-        dA          % Decomposition of interface linear system
+        scl1
+        scl2
+        S1           % Impedance data operator for the first child
+        S2           % Impedance data operator for the second child
 
     end
 
     methods
 
-        function P = parent(domain, id, S, D2N, D2N_scl, u_part, du_part, A, dA, edges, xyz, child1, child2, idx1, idx2, flip1, flip2, scl1, scl2)
+        function P = parent(domain, id, R, D2N, D2N_scl, S1, S2, edges, xyz, w, child1, child2, idx1, idx2, flip1, flip2, scl1, scl2)
 
             % Construct empty patch:
             if ( nargin == 0 )
@@ -31,16 +31,18 @@ classdef parent < surfaceop.patch
             % Assign domain and operators:
             P.domain = domain;
             P.id = id;
-            P.S = S;
+            P.R = R;
             P.D2N = D2N;
             P.D2N_scl = D2N_scl;
-            P.u_part = u_part;
-            P.du_part = du_part;
-            P.A = A;
-            P.dA = dA;
+%             P.u_part = u_part;
+%             P.du_part = du_part;
+            P.S1 = S1;
+            P.S2 = S2;
             P.edges = edges;
             P.xyz = xyz;
+            P.w = w;
             P.len = child1.len + child2.len;
+            P.eta = child1.eta;
 
             % Assign children:
             P.child1 = child1;
@@ -51,7 +53,7 @@ classdef parent < surfaceop.patch
             P.flip2 = flip2;
             P.scl1 = scl1;
             P.scl2 = scl2;
-
+            
         end
 
     end

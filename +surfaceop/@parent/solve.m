@@ -13,11 +13,11 @@ elseif ( isscalar(bc) )
 end
 
 % Evaluate the solution operator for the parent:
-%u = P.S * [bc ; 1]; % The 1 accounts for the particular part.
-u = P.u_part;
-if ( ~isempty(bc) )
-    u = u + P.S * bc;
-end
+% u = P.S * [bc ; 1]; % The 1 accounts for the particular part.
+% u = P.u_part;
+% if ( ~isempty(bc) )
+%     u = u + P.S * bc;
+% end
 
 % Construct boundary conditions for children and recurse.
 

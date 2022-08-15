@@ -15,11 +15,13 @@ classdef leaf < surfaceop.patch
         X        % Local (homogeneous BC) solution operator.
         normal_d % Normal derivative operator.
                  % (These are stored so the RHS can be efficiently updated)
+        u_part
+        du_part
     end
 
     methods
 
-        function P = leaf(dom, id, X, R, u_part, Iu_part, edges, D2N, xyz, normal_d)
+        function P = leaf(dom, id, R, D2N, D2N_scl, u_part, du_part, edges, xyz, w, X, normal_d,eta)
 
             % Construct empty patch:
             if ( nargin == 0 )
@@ -27,19 +29,21 @@ classdef leaf < surfaceop.patch
             end
 
             % Assign domain and operators:
-            P.n = size(dom.x{id}, 1);  % Discretization size.
-            P.domain = dom;            % Domain.
-            P.id = id;                 % Index of patch in domain.
-            P.X = X;                   % Solution operator.
-            P.R = R;                   % ItI map
-            P.u_part = u_part;
-            P.Iu_part = Iu_part;       % Outgoing impedance data (particular)
-            P.edges = edges;           % Edges.
-            P.xyz = xyz;               % Boundary nodes.
-            P.D2N = D2N;                  % Recovered D2N map
-            P.normal_d = normal_d;     % Normal derivative operator.
+            P.n = size(dom.x{id}, 1); % Discretization size.
+            P.domain = dom;           % Domain.
+            P.id = id;                % Index of patch in domain.
+            P.R = R;                  % ItI map
+            P.D2N = D2N;              % Dirichlet-to-Neumann map.
+            P.D2N_scl = D2N_scl;      % Scalings for Dirichlet-to-Neumann map.
+            P.u_part = u_part;        % Particular solution.
+            P.du_part = du_part;      % Impedance data of particular solution.
+            P.edges = edges;          % Boundary edges.
+            P.xyz = xyz;              % Boundary nodes.
+            P.w = w;                  % Boundary quadrature weights.
+            P.X = X;                  % Local solution operator.
+            P.normal_d = normal_d;    % Normal derivative operator.
             P.len = 1;
-
+            P.eta = eta;
         end
 
     end

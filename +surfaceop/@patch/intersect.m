@@ -1,4 +1,4 @@
-function [i1, i2, i4a, i4b, flip1, flip2,dom, edgesAB] = intersect(a, b)
+function [i1, i2, i4a, i4b, flip1, flip2, scl1, scl2, sclAB, dom, edgesAB] = intersect(a, b)
 %INTERSECT   Compute the indices of the glue between two patches.
 %   [I1, I2, I4A, I4B, L2G1, L2G2, SCL1, SCL2, SCLAB] = INTERSECT(A, B)
 %   returns the indices of the glue w.r.t. A.edges and B.edges of two
@@ -103,21 +103,21 @@ i2 = (1:sum(pB)).'; i2(i4b) = [];
 
 %% Construct operators for p-adaptivity and Jacobian scaling.
 
-% sclA = a.D2N_scl;
-% sclB = b.D2N_scl;
-% scl1 = cat(1, sclA{iA});
-% scl2 = cat(1, sclB{iB});
-% if ( isempty(scl1) )
-%     scl1 = zeros(0,1);
-%     scl2 = zeros(0,1);
-% end
-% 
-% % Concatenate the scaling functions for the parent's edges.
-% if ( ~isempty(iA) )
-%     sclA(iA) = [];
-%     sclB(iB) = [];
-% end
-% sclAB = [sclA ; sclB];
+sclA = a.D2N_scl;
+sclB = b.D2N_scl;
+scl1 = cat(1, sclA{iA});
+scl2 = cat(1, sclB{iB});
+if ( isempty(scl1) )
+    scl1 = zeros(0,1);
+    scl2 = zeros(0,1);
+end
+
+% Concatenate the scaling functions for the parent's edges.
+if ( ~isempty(iA) )
+    sclA(iA) = [];
+    sclB(iB) = [];
+end
+sclAB = [sclA ; sclB];
 
 edgesA(iA,:) = [];
 edgesB(iB,:) = [];
@@ -142,3 +142,4 @@ function [AI, BI] = intersectTol(A, B, tol)
    AI = find(M);
    BI = M(AI); 
 end
+
