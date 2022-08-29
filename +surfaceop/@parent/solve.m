@@ -3,14 +3,14 @@ function u = solve(P, bc)
 %   U = SOLVE(P, BC) returns a cell array U of function values representing
 %   the PDE solution on the parent P with Dirichlet boundary data given by
 %   BC.
-
-% if ( ~isnumeric(bc) )
-%     % Evaluate the RHS if given a function handle:
-%     bc = feval(bc, P.xyz(:,1), P.xyz(:,2), P.xyz(:,3));
-% elseif ( isscalar(bc) )
-%     % Convert a scalar to a constant vector:
-%     bc = repmat(bc, size(P.xyz, 1), 1);
-% end
+eta = 2i;
+if ( ~isnumeric(bc) && ~isa(bc,"surfacefun"))
+    % Evaluate the RHS if given a function handle:
+    bc = eta*feval(bc, P.xyz(:,1), P.xyz(:,2), P.xyz(:,3)) + P.D2N*feval(bc, P.xyz(:,1), P.xyz(:,2), P.xyz(:,3));
+elseif ( isscalar(bc) )
+    % Convert a scalar to a constant vector:
+    bc = eta*repmat(bc, size(P.xyz, 1), 1) + P.D2N*repmat(bc, size(P.xyz, 1), 1);
+end
 
 % Evaluate the solution operator for the parent:
 % u = P.S * [bc ; 1]; % The 1 accounts for the particular part.

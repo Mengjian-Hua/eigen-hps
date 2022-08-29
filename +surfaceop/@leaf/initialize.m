@@ -202,6 +202,8 @@ for k = 1:numPatches
     % Construct the ItI map
     G = normal_d - eta*B*P01;
     R = G*X(:,1:numBdyPts);
+    D2N = -eta*(R-eye(4*n))\(R+eye(4*n));
+
     [xn1, ~, vn1] = chebpts(nbdy, 1);
     [xn2, ~, vn2] = chebpts(n-2, 1);
     C  = barymat(xn2, xn1, vn1);
@@ -241,7 +243,6 @@ for k = 1:numPatches
     ww = ww(ee);
     ww = ww(ss);
 
-    D2N = -eta*(R-eye(4*n-8))\(R+eye(4*n-8));
     L{k} = surfaceop.leaf(dom, k, R, D2N, D2N_scl, u_part, Iu_part, edges, xyz, ww, X, normal_d,eta);
     
     % test
