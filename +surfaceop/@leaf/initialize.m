@@ -36,9 +36,7 @@ eta = 2i;
 % Note that here the index sets are different from what we had before
 kindFrom = 1;
 kindTo   = 1;
-ibc = 3*(n-2)+1;
-n_b = n-2;
-ss = [1:n_b 3*n_b+1:4*n_b n_b+1:2:3*n_b n_b+2:2:3*n_b];
+ss = [1:n 3*n-3:4*n-4 n:2:3*n-3 4*n-4 1 n+1:2:3*n-3];
 
 
 [x0, ~, v0] = chebpts(n,   kindFrom);
@@ -232,6 +230,12 @@ for k = 1:numPatches
     zee = z(ee);
     xyz = [xee(ss) yee(ss) zee(ss)];
 
+    for side = 1:4
+        xyz(side*n-n+1:side*n,1) = chebvals2chebvals(xyz(side*n-n+1:side*n,1),2,1);
+        xyz(side*n-n+1:side*n,2) = chebvals2chebvals(xyz(side*n-n+1:side*n,2),2,1);
+        xyz(side*n-n+1:side*n,3) = chebvals2chebvals(xyz(side*n-n+1:side*n,3),2,1);
+    end
+
     w = chebtech2.quadwts(n); w = w(:);
     ww = w .* w.' .* sqrt(dom.J{k});
     ww = ww(ee);
@@ -241,15 +245,13 @@ for k = 1:numPatches
     L{k} = surfaceop.leaf(dom, k, R, D2N, D2N_scl, u_part, Iu_part, edges, xyz, ww, X, normal_d,eta);
     
     % test
-    u_true = spherefun.sphharm(1,0);
-    uu2 = u_true(x,y,z); % second kind nodes
-    gg = F*uu2(:); % compute the incoming impedance data
-    norm(uu2(:) - X*[gg(:);1])
-    
-    gg = CC*gg; 
-    ff = CC*G*uu2(:);
-    norm(R*gg + CC*G*u_part - ff)
-
+%     u_true = spherefun.sphharm(1,0);
+%     uu2 = u_true(x,y,z); % second kind nodes
+%     gg = F*uu2(:); % compute the incoming impedance data
+%     norm(uu2(:) - X*[gg(:);1])
+%     gg = CC*gg; 
+%     ff = CC*G*uu2(:); % outgoing impedance data 
+%     norm(R*gg + CC*G*u_part - ff)
 end
 
 

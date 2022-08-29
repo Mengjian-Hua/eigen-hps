@@ -4,38 +4,63 @@ function u = solve(P, bc)
 %   the PDE solution on the parent P with Dirichlet boundary data given by
 %   BC.
 
-if ( ~isnumeric(bc) )
-    % Evaluate the RHS if given a function handle:
-    bc = feval(bc, P.xyz(:,1), P.xyz(:,2), P.xyz(:,3));
-elseif ( isscalar(bc) )
-    % Convert a scalar to a constant vector:
-    bc = repmat(bc, size(P.xyz, 1), 1);
-end
+% if ( ~isnumeric(bc) )
+%     % Evaluate the RHS if given a function handle:
+%     bc = feval(bc, P.xyz(:,1), P.xyz(:,2), P.xyz(:,3));
+% elseif ( isscalar(bc) )
+%     % Convert a scalar to a constant vector:
+%     bc = repmat(bc, size(P.xyz, 1), 1);
+% end
 
 % Evaluate the solution operator for the parent:
 % u = P.S * [bc ; 1]; % The 1 accounts for the particular part.
-% u = P.u_part;
-% if ( ~isempty(bc) )
-%     u = u + P.S * bc;
-% end
+Iu = conj(P.Iu_part); % convert outgoing ItI data to incoming ItI data
+
 
 % Construct boundary conditions for children and recurse.
 
 % Construct boundary indices:
-i1 = 1:numel(P.idx1{1});
-i2 = 1:numel(P.idx2{1});
+i1 = cat(1,P.idx1{1});
+i31 = cat(1,P.idx1{2});
+i2 = cat(1,P.idx2{1});
+i32 = cat(1,P.idx2{2});
+
+bci1 = 1:numel(P.idx1{1});
+bci2 = 1:numel(P.idx2{1});
 if ( ~isempty(i1) )
-    i2 = i2 + i1(end);
+    bci2 = bci2 + bci1(end);
 end
 % CAT() is 10x faster than CELL2MAT().
 idx1 = cat(1, P.idx1{:}); % idx1 = cell2mat(P.idx1.');
 idx2 = cat(1, P.idx2{:}); % idx2 = cell2mat(P.idx2.');
 
 % Assemble boundary conditions for child patches:
-ubc1 = ones(size(P.child1.S, 2)-1, 1);
-ubc1(idx1) = [bc(i1) ; P.flip1.'*u];
-ubc2 = ones(size(P.child2.S, 2)-1, 1);
-ubc2(idx2) = [bc(i2) ; P.flip2.'*u];
+if (isempty(P.R)) % top level
+    ubc1 = zeros(size(P.child1.S2, 2), 1);
+    ubc2 = zeros(size(P.child2.S2, 2), 1);
+    if(isempty(bc))
+        ubc1(idx1) = Iu(1:end/2);
+        ubc2(idx2) = Iu(end/2+1:end);
+    else
+        ubc1(i1) = bc(bci1) - Iu(1:end/2);
+        ubc2(i2) = bc(bci2) - Iu(end/2+1:end);
+        ubc1(i31) = P.flip1.'*P.S1*(bc-Iu);
+        ubc2(i32) = P.flip2.'*P.S2*(bc-Iu);
+    end
+elseif (isempty(P.S1) && isempty(P.S2))
+        ubc1 = zeros(size(P.child1.S2, 2), 1);
+        ubc2 = zeros(size(P.child1.S2, 2), 1);
+        ubc1(idx1) = bc(bci1) - Iu(1:end/2);
+        ubc2(idx2) = bc(bci2) - Iu(end/2+1:end);
+else
+        ubc1 = zeros(size(P.child1.xyz,1), 1);
+        ubc2 = zeros(size(P.child1.xyz,1), 1);
+        ubc1(i1) = bc(bci1) - Iu(1:end/2);
+        ubc2(i2) = bc(bci2) - Iu(end/2+1:end);
+        ubc1(i31) = P.flip1.'*P.S1*(bc-Iu);
+        ubc2(i32) = P.flip2.'*P.S2*(bc-Iu);
+end
+
 
 % Solve for the child patches:
 u1 = solve(P.child1, ubc1);

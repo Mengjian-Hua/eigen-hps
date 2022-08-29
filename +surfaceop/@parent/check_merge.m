@@ -35,7 +35,7 @@ L2 = surfaceop(dom2,pdo,rhs2);
 load('test.mat')
 R1 = L1.patches{1}.R;
 R2 = R;
-
+ 
 leftIdx1  = 1:n-2;
 downIdx1  = 1*(n-2)+1:2*(n-2);
 upIdx1    = 2*(n-2)+1:3*(n-2);
@@ -68,5 +68,5 @@ CC = blkdiag(C2,C2,C1,C1);
 C1 = barymat(xh,x4,v4);
 C2 = barymat(x2,x3,v3);
 CC1 = blkdiag(C2,C2,C1,C1);
-
+%% 
 norm(CC*R2*CC1 - R1)

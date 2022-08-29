@@ -16,12 +16,11 @@ classdef leaf < surfaceop.patch
         normal_d % Normal derivative operator.
                  % (These are stored so the RHS can be efficiently updated)
         u_part
-        du_part
     end
 
     methods
 
-        function P = leaf(dom, id, R, D2N, D2N_scl, u_part, du_part, edges, xyz, w, X, normal_d,eta)
+        function P = leaf(dom, id, R, D2N, D2N_scl, u_part, Iu_part, edges, xyz, w, X, normal_d,eta)
 
             % Construct empty patch:
             if ( nargin == 0 )
@@ -36,7 +35,7 @@ classdef leaf < surfaceop.patch
             P.D2N = D2N;              % Dirichlet-to-Neumann map.
             P.D2N_scl = D2N_scl;      % Scalings for Dirichlet-to-Neumann map.
             P.u_part = u_part;        % Particular solution.
-            P.du_part = du_part;      % Impedance data of particular solution.
+            P.Iu_part = Iu_part;      % Impedance data of particular solution.
             P.edges = edges;          % Boundary edges.
             P.xyz = xyz;              % Boundary nodes.
             P.w = w;                  % Boundary quadrature weights.

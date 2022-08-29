@@ -16,6 +16,12 @@ n = size(P.domain.x{id}, 1);
 
 % Evaluate the solution operator for the patch:
 %u = P.S * [bc ; 1]; % The 1 accounts for the particular part.
+% [xn1, ~, vn1] = chebpts(n, 2);
+% [xn2, ~, vn2] = chebpts(n, 1);
+% C  = barymat(xn1, xn2, vn2);
+% CC = blkdiag(C, C, C, C);
+
+
 u = P.X*[bc(:);1];
 u = reshape(u, n, n);
 

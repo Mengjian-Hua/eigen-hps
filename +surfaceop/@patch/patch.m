@@ -9,8 +9,8 @@ classdef ( Abstract ) patch
         D2N     % Dirichlet-to-Neumann map for patch.
         D2N_scl % Cell array of scalars or function handles.
                 % The k-th entry is the scaling for the D2N map on side k.
-%         u_part  % Particular solution.
-%         du_part % Normal derivative of particular solution.
+        % u_part  % Particular solution.
+        Iu_part % Outgoing impedance data of particular solution.
         edges   % Boundary edges of patch.
         xyz     % Boundary grid points of patch.
         w       % Boundary quadrature weights of patch.
