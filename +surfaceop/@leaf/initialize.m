@@ -179,6 +179,13 @@ for k = 1:numPatches
     
     % Construct solution operator with impedance data:
 
+    [xn1, ~, vn1] = chebpts(nbdy, 1);
+    [xn2, ~, vn2] = chebpts(n-2, 1);
+    C  = barymat(xn2, xn1, vn1);
+    C1 = barymat(xn1, xn2, vn2);
+    CC = blkdiag(C, C, C, C);
+    CC1 = blkdiag(C1, C1, C1, C1);
+
     if ( dom.singular(k) )
         % solution operator, denoted by X, with incoming impedance data
         F = normal_d + eta*B*P01; % equation (2.9) 
@@ -189,28 +196,23 @@ for k = 1:numPatches
         X = dB1\rhsX; % equation below (2.10)
     else
         % solution operator, denoted by X, with incoming impedance data
-        F = normal_d + eta*B*P01; % equation (2.9) 
+        F = CC*(normal_d + eta*B*P01); % equation (2.9) 
         %A = P01*A;
         %B1 = [A(ii,:);F];
         A = P_rhs*A;
         B1 = [A ; F];
         dB1 = decomposition(B1);
-        rhsX = [zeros(numIntPts, numBdyPts) rhs_eval(:); eye(numBdyPts) zeros(numBdyPts, 1)];
+        rhsX = [zeros(numIntPts, numBdyPts-8) rhs_eval(:); eye(numBdyPts-8) zeros(numBdyPts-8, 1)];
         X = dB1\rhsX; % equation below (2.10)
     end
       
     % Construct the ItI map
     G = normal_d - eta*B*P01;
-    R = G*X(:,1:numBdyPts);
-    D2N = -eta*(R-eye(4*n))\(R+eye(4*n));
+    R = CC*G*X(:,1:numBdyPts-8);
+    D2N = -eta*(R-eye(4*n-8))\(R+eye(4*n-8));
 
-    [xn1, ~, vn1] = chebpts(nbdy, 1);
-    [xn2, ~, vn2] = chebpts(n-2, 1);
-    C  = barymat(xn2, xn1, vn1);
-    C1 = barymat(xn1, xn2, vn2);
-    CC = blkdiag(C, C, C, C);
-    CC1 = blkdiag(C1, C1, C1, C1);
-    R = CC * R * CC1;
+%     R = CC * R * CC1;
+%     D2N = CC * D2N * CC1;
     
     u_part = X(:,end);
     Iu_part = CC*G*u_part;
@@ -231,12 +233,14 @@ for k = 1:numPatches
     yee = y(ee);
     zee = z(ee);
     xyz = [xee(ss) yee(ss) zee(ss)];
+    temp = zeros(4*(n-2),3);
 
     for side = 1:4
-        xyz(side*n-n+1:side*n,1) = chebvals2chebvals(xyz(side*n-n+1:side*n,1),2,1);
-        xyz(side*n-n+1:side*n,2) = chebvals2chebvals(xyz(side*n-n+1:side*n,2),2,1);
-        xyz(side*n-n+1:side*n,3) = chebvals2chebvals(xyz(side*n-n+1:side*n,3),2,1);
+        temp(side*(n-2)-(n-2)+1:side*(n-2),1) = S02*chebvals2chebvals(xyz(side*n-n+1:side*n,1),2,1);
+        temp(side*(n-2)-(n-2)+1:side*(n-2),2) = S02*chebvals2chebvals(xyz(side*n-n+1:side*n,2),2,1);
+        temp(side*(n-2)-(n-2)+1:side*(n-2),3) = S02*chebvals2chebvals(xyz(side*n-n+1:side*n,3),2,1);
     end
+    xyz = temp;
 
     w = chebtech2.quadwts(n); w = w(:);
     ww = w .* w.' .* sqrt(dom.J{k});

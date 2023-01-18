@@ -1,12 +1,12 @@
 % One big element
-n = 32;
+n = 10;
 [x, y] = chebpts2(n, n, [-1 1 -0.5 0.5]);
 z = 1+0*x;
 dom1 = surfacemesh({x}, {y}, {z});
  
 
 % Two glued elements
-n = 32;
+n = 10;
 [xL, yL] = chebpts2(n, n, [-1 0 -0.5 0.5]);
 [xR, yR] = chebpts2(n, n, [ 0 1 -0.5 0.5]);
 zL = 1+0*xL;
