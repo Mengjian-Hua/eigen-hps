@@ -21,8 +21,8 @@ end
 % Extract ItI maps:
 Ra = a.R; Rb = b.R;
 eta = a.eta;
-R33_a = Ra(J31,J31);
-R33_b = Rb(J32,J32);
+R33_a = flip1*Ra(J31,J31)*flip1.';
+R33_b = flip2*Rb(J32,J32)*flip2.';
 W = inv(eye(size(R33_b*R33_a))-R33_b*R33_a);
 W_inv = eye(size(R33_b*R33_a))-R33_b*R33_a;
 R = [Ra(J1,J1) + Ra(J1,J31)*W*R33_b*Ra(J31,J1)...
@@ -31,7 +31,7 @@ R = [Ra(J1,J1) + Ra(J1,J31)*W*R33_b*Ra(J31,J1)...
         Rb(J2,J2) + Rb(J2,J32)*R33_a*W*Rb(J32,J2)];
 D2N = -eta*(R-eye(size(R)))\(R+eye(size(R)));
 S_alpha = [W*Rb(J32,J32)*Ra(J31,J1) -W*Rb(J32,J2)];
-S_beta = -[Ra(J31,J1)+Ra(J31,J31)*W*Rb(J32,J32)*Ra(J31,J1) R33_a*W*Rb(J32,J2)];
+S_beta = -[Ra(J31,J1)+Ra(J31,J31)*W*Rb(J32,J32)*Ra(J31,J1) R33_a*W*Rb(J32,J2)]; % ?
 Iu_part_a = a.Iu_part;
 Iu_part_b = b.Iu_part;
 

@@ -176,7 +176,6 @@ for k = 1:numPatches
     normal_d(nbdy+1:2*nbdy,:) = nr(:,1).*(B(nbdy+1:2*nbdy,:)*P01*Dx) + nr(:,2).*(B(nbdy+1:2*nbdy,:)*P01*Dy) + nr(:,3).*(B(nbdy+1:2*nbdy,:)*P01*Dz);
     normal_d(2*nbdy+1:3*nbdy,:)  = nd(:,1).*(B(2*nbdy+1:3*nbdy,:)*P01*Dx)  + nd(:,2).*(B(2*nbdy+1:3*nbdy,:)*P01*Dy)  + nd(:,3).*(B(2*nbdy+1:3*nbdy,:)*P01*Dz);
     normal_d(3*nbdy+1:4*nbdy,:)    = nu(:,1).*(B(3*nbdy+1:4*nbdy,:)*P01*Dx)    + nu(:,2).*(B(3*nbdy+1:4*nbdy,:)*P01*Dy)  + nu(:,3).*(B(3*nbdy+1:4*nbdy,:)*P01*Dz);
-    
     % Construct solution operator with impedance data:
 
     [xn1, ~, vn1] = chebpts(nbdy, 1);
@@ -196,15 +195,18 @@ for k = 1:numPatches
         X = dB1\rhsX; % equation below (2.10)
     else
         % solution operator, denoted by X, with incoming impedance data
-        F = CC*(normal_d + eta*B*P01); % equation (2.9) 
+        F = (normal_d + eta*B*P01); % equation (2.9) 
         %A = P01*A;
         %B1 = [A(ii,:);F];
         A = P_rhs*A;
         B1 = [A ; F];
         dB1 = decomposition(B1);
-        rhsX = [zeros(numIntPts, numBdyPts-8) rhs_eval(:); eye(numBdyPts-8) zeros(numBdyPts-8, 1)];
+        rhsX = [zeros(numIntPts, numBdyPts) rhs_eval(:); eye(numBdyPts) zeros(numBdyPts, 1)];
         X = dB1\rhsX; % equation below (2.10)
     end
+
+    Y = [X(:,1:end-1) * CC1 X(:,end)];
+    X = Y;
       
     % Construct the ItI map
     G = normal_d - eta*B*P01;
