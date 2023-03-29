@@ -6,7 +6,7 @@ function u = solve(P, bc)
 eta = 2i;
 if ( ~isnumeric(bc) && ~isa(bc,"surfacefun"))
     % Evaluate the RHS if given a function handle:
-    bc = eta*feval(bc, P.xyz(:,1), P.xyz(:,2), P.xyz(:,3)) - abs(eta)^2*P.D2N*feval(bc, P.xyz(:,1), P.xyz(:,2), P.xyz(:,3));bc = eta*feval(bc, P.xyz(:,1), P.xyz(:,2), P.xyz(:,3)) - abs(eta)^2*P.D2N*feval(bc, P.xyz(:,1), P.xyz(:,2), P.xyz(:,3));bc = eta*feval(bc, P.xyz(:,1), P.xyz(:,2), P.xyz(:,3)) - abs(eta)^2*P.D2N*feval(bc, P.xyz(:,1), P.xyz(:,2), P.xyz(:,3));
+    bc = eta*feval(bc, P.xyz(:,1), P.xyz(:,2), P.xyz(:,3)) - abs(eta)^2*P.D2N*feval(bc, P.xyz(:,1), P.xyz(:,2), P.xyz(:,3));
 
 elseif ( isscalar(bc) )
     % Convert a scalar to a constant vector:
